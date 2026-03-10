@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fun Money</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e0c;
+    --surface: #1a1916;
+    --border: #2e2c28;
+    --text: #f0ece3;
+    --muted: #7a7568;
+    --accent: #d4a84b;
+    --ahead: #6fcf8a;
+    --behind: #e07a5f;
+    --neutral: #8eb8d4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 80px;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 2.4rem;
+    font-weight: 300;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .card-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  /* Setup section */
+  .field {
+    margin-bottom: 16px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .field input, .field select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 1rem;
+    padding: 10px 14px;
+    transition: border-color 0.15s;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+  }
+
+  .field input::placeholder {
+    color: var(--muted);
+    opacity: 0.5;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* Status display */
+  .status-main {
+    text-align: center;
+    padding: 8px 0 16px;
+  }
+
+  .status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  .status-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    vertical-align: middle;
+  }
+
+  .big-number {
+    font-family: 'Fraunces', serif;
+    font-size: 3.8rem;
+    font-weight: 700;
+    line-height: 1;
+    margin: 12px 0 4px;
+    letter-spacing: -0.03em;
+  }
+
+  .big-number.ahead { color: var(--ahead); }
+  .big-number.behind { color: var(--behind); }
+  .big-number.neutral { color: var(--neutral); }
+
+  .status-desc {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .pace-line {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+
+  .pace-line strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* Chart */
+  .chart-section {
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+
+  .chart-legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 10px;
+    justify-content: flex-end;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .legend-line {
+    display: inline-block;
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+  }
+
+  .legend-line--plan {
+    background: var(--muted);
+    opacity: 0.6;
+  }
+
+  .legend-line--actual {
+    background: var(--accent);
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .stat-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .stat-box .stat-label {
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .stat-box .stat-value {
+    font-size: 1.1rem;
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+  }
+
+  /* Balance input */
+  .balance-input-wrap {
+    position: relative;
+  }
+
+  .balance-prefix {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 1rem;
+    pointer-events: none;
+  }
+
+  .balance-input-wrap input {
+    padding-left: 26px;
+    font-size: 1.4rem;
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+  }
+
+  /* Buttons */
+  button {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: var(--bg);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 13px;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    margin-top: 4px;
+  }
+
+  button:hover { opacity: 0.88; }
+  button:active { transform: scale(0.98); }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.7rem;
+    padding: 10px;
+    margin-top: 8px;
+  }
+
+  .btn-secondary:hover { border-color: var(--muted); color: var(--text); opacity: 1; }
+
+  /* History */
+  .history-list {
+    list-style: none;
+  }
+
+  .history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.78rem;
+  }
+
+  .history-item:last-child { border-bottom: none; }
+
+  .history-date { color: var(--muted); font-size: 0.68rem; }
+  .history-balance { font-family: 'Fraunces', serif; font-weight: 300; font-size: 1rem; }
+
+  .history-delta {
+    font-size: 0.68rem;
+    padding: 2px 7px;
+    border-radius: 99px;
+  }
+
+  .delta-pos { background: rgba(111, 207, 138, 0.12); color: var(--ahead); }
+  .delta-neg { background: rgba(224, 122, 95, 0.12); color: var(--behind); }
+
+  /* Divider */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 4px 0 16px;
+  }
+
+  /* Last updated */
+  .last-updated {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-align: center;
+    margin-top: -8px;
+    margin-bottom: 16px;
+  }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.78rem;
+    padding: 16px 0 4px;
+  }
+
+  /* View toggle */
+  .view-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+
+  .tab {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 7px;
+    transition: all 0.15s;
+    margin: 0;
+    width: auto;
+  }
+
+  .tab.active {
+    background: var(--surface);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .tab:hover:not(.active) { color: var(--text); opacity: 1; }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* Cycle info line */
+  .cycle-info {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .cycle-info span {
+    color: var(--text);
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>fun money</h1>
+    <p class="subtitle">spending pace tracker</p>
+  </header>
+
+  <!-- Setup / Settings -->
+  <div class="card" id="setup-card">
+    <div class="card-label">Settings</div>
+    <div class="row">
+      <div class="field">
+        <label>Monthly limit ($)</label>
+        <input type="number" id="monthly-limit" placeholder="500" min="0">
+      </div>
+      <div class="field">
+        <label>Billing day</label>
+        <input type="number" id="billing-day" placeholder="1" min="1" max="28">
+      </div>
+    </div>
+    <button onclick="saveSettings()">Save Settings</button>
+    <button class="btn-secondary" onclick="toggleSetup()" id="close-setup-btn" style="display:none">Close</button>
+  </div>
+
+  <!-- Main view -->
+  <div id="main-view" style="display:none">
+    <div class="cycle-info" id="cycle-info"></div>
+
+    <div class="view-tabs">
+      <button class="tab active" onclick="showTab('status')">Status</button>
+      <button class="tab" onclick="showTab('update')">Update Balance</button>
+      <button class="tab" onclick="showTab('history')">History</button>
+    </div>
+
+    <!-- Status tab -->
+    <div class="view active" id="tab-status">
+      <div class="card">
+        <div class="status-main">
+          <div id="status-badge">
+            <span class="status-indicator" id="status-dot"></span>
+            <span class="status-label" id="status-text"></span>
+          </div>
+          <div class="big-number" id="delta-display"></div>
+          <div class="status-desc" id="status-desc"></div>
+          <div class="pace-line" id="pace-line"></div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="chart-section">
+          <div class="chart-legend">
+            <span class="legend-item"><span class="legend-line legend-line--plan"></span>budget pace</span>
+            <span class="legend-item"><span class="legend-line legend-line--actual"></span>actual spend</span>
+          </div>
+          <svg id="burnup-chart" width="100%" viewBox="0 0 400 160" preserveAspectRatio="xMidYMid meet" style="overflow:visible"></svg>
+        </div>
+
+          <div class="two-col">
+            <div class="stat-box">
+              <div class="stat-label">Spent so far</div>
+              <div class="stat-value" id="spent-so-far"></div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Budget used</div>
+              <div class="stat-value" id="budget-pct"></div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Could have spent</div>
+              <div class="stat-value" id="expected-spend"></div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Days left in cycle</div>
+              <div class="stat-value" id="days-left"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="last-updated" id="last-updated-label"></div>
+      <button class="btn-secondary" onclick="toggleSetup()">⚙ Edit Settings</button>
+    </div>
+
+    <!-- Update balance tab -->
+    <div class="view" id="tab-update">
+      <div class="card">
+        <div class="card-label">Current card balance</div>
+        <p style="font-size:0.74rem; color:var(--muted); margin-bottom:18px; line-height:1.6">
+          Enter the balance showing on your card right now. The app figures out where you <em>should</em> be and does the comparison automatically.
+        </p>
+        <div class="field">
+          <label>Balance ($)</label>
+          <div class="balance-input-wrap">
+            <span class="balance-prefix">$</span>
+            <input type="number" id="new-balance" placeholder="0.00" step="0.01" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Note (optional)</label>
+          <input type="text" id="balance-note" placeholder="e.g. after dinner out">
+        </div>
+        <button onclick="logBalance()">Log Balance</button>
+      </div>
+      <div id="log-confirmation" style="display:none" class="card" >
+        <div style="text-align:center; padding: 8px 0">
+          <div style="font-size:1.6rem; margin-bottom:8px">✓</div>
+          <div style="font-size:0.8rem; color:var(--ahead)">Balance logged.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History tab -->
+    <div class="view" id="tab-history">
+      <div class="card">
+        <div class="card-label">Balance log</div>
+        <ul class="history-list" id="history-list">
+          <li class="empty">No entries yet.</li>
+        </ul>
+      </div>
+      <button class="btn-secondary" onclick="if(confirm('Clear all history?')) clearHistory()">Clear history</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- State ----
+  let settings = JSON.parse(localStorage.getItem('funmoney_settings') || 'null');
+  let history = JSON.parse(localStorage.getItem('funmoney_history') || '[]');
+
+  function save() {
+    localStorage.setItem('funmoney_settings', JSON.stringify(settings));
+    localStorage.setItem('funmoney_history', JSON.stringify(history));
+  }
+
+  // ---- Cycle logic ----
+  function getCycleInfo() {
+    const now = new Date();
+    const billingDay = settings.billingDay;
+    const today = now.getDate();
+
+    let cycleStart, cycleEnd;
+
+    if (today >= billingDay) {
+      cycleStart = new Date(now.getFullYear(), now.getMonth(), billingDay);
+      cycleEnd = new Date(now.getFullYear(), now.getMonth() + 1, billingDay);
+    } else {
+      cycleStart = new Date(now.getFullYear(), now.getMonth() - 1, billingDay);
+      cycleEnd = new Date(now.getFullYear(), now.getMonth(), billingDay);
+    }
+
+    const totalMs = cycleEnd - cycleStart;
+    const elapsedMs = now - cycleStart;
+    const fractionElapsed = Math.min(1, Math.max(0, elapsedMs / totalMs));
+    const totalDays = Math.round(totalMs / 86400000);
+    const daysElapsed = Math.floor(elapsedMs / 86400000);
+    const daysLeft = totalDays - daysElapsed;
+
+    return { cycleStart, cycleEnd, fractionElapsed, totalDays, daysElapsed, daysLeft };
+  }
+
+  function getStatus() {
+    const limit = settings.monthlyLimit;
+    const ci = getCycleInfo();
+
+    // Expected spend at this point in cycle = fraction * monthly limit
+    const expectedSpend = ci.fractionElapsed * limit;
+
+    // Latest logged balance for this cycle
+    const thisHistory = history.filter(h => {
+      const d = new Date(h.ts);
+      return d >= ci.cycleStart && d <= ci.cycleEnd;
+    });
+
+    if (thisHistory.length === 0) return { noData: true, ci, expectedSpend, limit };
+
+    const latest = thisHistory[thisHistory.length - 1];
+    // Balance on a credit card IS the amount spent this cycle
+    const actualSpend = latest.balance;
+    const delta = expectedSpend - actualSpend; // positive = under pace (good), negative = over pace (bad)
+    const spendFraction = Math.min(1.5, actualSpend / limit);
+
+    return {
+      noData: false,
+      ci,
+      actualSpend,
+      expectedSpend,
+      delta,
+      spendFraction,
+      limit,
+      latestTs: latest.ts
+    };
+  }
+
+  // ---- Render ----
+  function render() {
+    if (!settings) {
+      document.getElementById('setup-card').style.display = 'block';
+      document.getElementById('main-view').style.display = 'none';
+      document.getElementById('close-setup-btn').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('setup-card').style.display = 'none';
+    document.getElementById('main-view').style.display = 'block';
+
+    // Populate settings fields
+    document.getElementById('monthly-limit').value = settings.monthlyLimit;
+    document.getElementById('billing-day').value = settings.billingDay;
+
+    const s = getStatus();
+    const ci = s.ci;
+
+    // Cycle info line
+    const opts = { month: 'short', day: 'numeric' };
+    document.getElementById('cycle-info').innerHTML =
+      `Cycle: <span>${ci.cycleStart.toLocaleDateString('en-US', opts)} – ${ci.cycleEnd.toLocaleDateString('en-US', opts)}</span> · Day <span>${ci.daysElapsed + 1}</span> of <span>${ci.totalDays}</span>`;
+
+    if (s.noData) {
+      document.getElementById('status-dot').style.background = 'var(--muted)';
+      document.getElementById('status-text').textContent = 'no data yet';
+      document.getElementById('delta-display').textContent = '—';
+      document.getElementById('delta-display').className = 'big-number neutral';
+      document.getElementById('status-desc').textContent = 'Log your card balance to get started';
+      document.getElementById('spent-so-far').textContent = '—';
+      document.getElementById('budget-pct').textContent = '—';
+      document.getElementById('expected-spend').textContent = '$' + Math.round(s.expectedSpend).toLocaleString();
+      document.getElementById('days-left').textContent = ci.daysLeft;
+      document.getElementById('last-updated-label').textContent = '';
+      document.getElementById('pace-line').innerHTML = '';
+    } else {
+      const ahead = s.delta >= 0;
+      const absDelta = Math.abs(s.delta);
+
+      document.getElementById('status-dot').style.background = ahead ? 'var(--ahead)' : 'var(--behind)';
+      document.getElementById('status-text').textContent = ahead ? 'on track' : 'over pace';
+      document.getElementById('delta-display').textContent = (ahead ? '+' : '−') + '$' + Math.round(absDelta).toLocaleString();
+      document.getElementById('delta-display').className = 'big-number ' + (ahead ? 'ahead' : 'behind');
+
+      if (ahead) {
+        document.getElementById('status-desc').textContent =
+          `You have $${Math.round(absDelta)} more headroom than expected for this point in the cycle`;
+      } else {
+        document.getElementById('status-desc').textContent =
+          `You're $${Math.round(absDelta)} over pace — consider slowing down`;
+      }
+
+      // Pacing line: convert dollar delta into days equivalent
+      const dailyRate = s.limit / ci.totalDays;
+      const daysEquiv = Math.round(absDelta / dailyRate);
+      const paceLine = document.getElementById('pace-line');
+      if (daysEquiv === 0) {
+        paceLine.innerHTML = `You're right on pace.`;
+      } else if (ahead) {
+        paceLine.innerHTML = `That's about <strong>${daysEquiv} day${daysEquiv !== 1 ? 's' : ''}</strong> worth of budget — you could spend nothing for ${daysEquiv} day${daysEquiv !== 1 ? 's' : ''} and still be on track.`;
+      } else {
+        paceLine.innerHTML = `That's about <strong>${daysEquiv} day${daysEquiv !== 1 ? 's' : ''}</strong> worth of budget — try <strong>${daysEquiv} no-spend day${daysEquiv !== 1 ? 's' : ''}</strong> to get back on track.`;
+      }
+
+      const spendPct = Math.min(100, (s.actualSpend / s.limit) * 100);
+      document.getElementById('spent-so-far').textContent = '$' + Math.round(s.actualSpend).toLocaleString();
+      document.getElementById('budget-pct').textContent = Math.round(spendPct) + '%';
+      document.getElementById('expected-spend').textContent = '$' + Math.round(s.expectedSpend).toLocaleString();
+      document.getElementById('days-left').textContent = ci.daysLeft;
+
+      const d = new Date(s.latestTs);
+      document.getElementById('last-updated-label').textContent =
+        'Balance as of ' + d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' at ' +
+        d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    }
+
+    renderChart(ci);
+    renderHistory(ci);
+  }
+
+  function renderChart(ci) {
+    const svg = document.getElementById('burnup-chart');
+    const W = 400, H = 160;
+    const pad = { top: 10, right: 12, bottom: 28, left: 38 };
+    const innerW = W - pad.left - pad.right;
+    const innerH = H - pad.top - pad.bottom;
+    const limit = settings.monthlyLimit;
+    const totalDays = ci.totalDays;
+    const now = new Date();
+
+    // Collect actual spend entries for this cycle, keyed to day index
+    const cycleEntries = history
+      .filter(h => { const d = new Date(h.ts); return d >= ci.cycleStart && d < ci.cycleEnd; })
+      .map(h => ({
+        day: Math.floor((new Date(h.ts) - ci.cycleStart) / 86400000),
+        balance: h.balance
+      }));
+
+    const todayDay = Math.floor((now - ci.cycleStart) / 86400000);
+
+    // Scales
+    const xScale = d => pad.left + (d / totalDays) * innerW;
+    const yScale = v => pad.top + innerH - (v / limit) * innerH;
+
+    // Y axis gridlines & labels
+    const yTicks = [0, 0.25, 0.5, 0.75, 1.0];
+    let gridLines = '';
+    let yLabels = '';
+    yTicks.forEach(t => {
+      const y = yScale(t * limit);
+      const val = Math.round(t * limit);
+      gridLines += `<line x1="${pad.left}" y1="${y}" x2="${pad.left + innerW}" y2="${y}" stroke="#2e2c28" stroke-width="1"/>`;
+      yLabels += `<text x="${pad.left - 5}" y="${y + 4}" text-anchor="end" fill="#7a7568" font-size="9" font-family="'DM Mono', monospace">$${val >= 1000 ? (val/1000).toFixed(1)+'k' : val}</text>`;
+    });
+
+    // X axis: show ~4 date labels evenly across cycle
+    let xLabels = '';
+    const xTickCount = 4;
+    for (let i = 0; i <= xTickCount; i++) {
+      const day = Math.round((i / xTickCount) * totalDays);
+      const x = xScale(day);
+      const d = new Date(ci.cycleStart.getTime() + day * 86400000);
+      const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      xLabels += `<text x="${x}" y="${pad.top + innerH + 16}" text-anchor="middle" fill="#7a7568" font-size="9" font-family="'DM Mono', monospace">${label}</text>`;
+    }
+
+    // Plan line: straight from (0,0) to (totalDays, limit)
+    const planLine = `<line
+      x1="${xScale(0)}" y1="${yScale(0)}"
+      x2="${xScale(totalDays)}" y2="${yScale(limit)}"
+      stroke="#7a7568" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.6"/>`;
+
+    // Budget limit ceiling line
+    const ceilLine = `<line
+      x1="${xScale(0)}" y1="${yScale(limit)}"
+      x2="${xScale(totalDays)}" y2="${yScale(limit)}"
+      stroke="#2e2c28" stroke-width="1"/>`;
+
+    // Actual spend: stepped line connecting logged entries
+    let actualPath = '';
+    let fillPath = '';
+    let dots = '';
+
+    if (cycleEntries.length > 0) {
+      // Build step points: starts at (0, 0), steps up at each entry
+      const points = [{ day: 0, val: 0 }];
+      cycleEntries.forEach(e => points.push({ day: e.day, val: e.balance }));
+      // Extend to today
+      const lastVal = points[points.length - 1].val;
+      if (todayDay > points[points.length - 1].day) {
+        points.push({ day: todayDay, val: lastVal });
+      }
+
+      // Build stepped SVG path
+      let pathD = `M ${xScale(points[0].day)} ${yScale(points[0].val)}`;
+      for (let i = 1; i < points.length; i++) {
+        // horizontal then vertical (step)
+        pathD += ` H ${xScale(points[i].day)} V ${yScale(points[i].val)}`;
+      }
+
+      actualPath = `<path d="${pathD}" fill="none" stroke="#d4a84b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+      // Shaded area under actual line
+      let fillD = pathD + ` V ${yScale(0)} H ${xScale(points[0].day)} Z`;
+      fillPath = `<path d="${fillD}" fill="#d4a84b" opacity="0.07"/>`;
+
+      // Dots at each logged entry
+      dots = cycleEntries.map(e => {
+        const isOver = e.balance > (e.day / totalDays) * limit;
+        const col = isOver ? '#e07a5f' : '#6fcf8a';
+        return `<circle cx="${xScale(e.day)}" cy="${yScale(e.balance)}" r="3.5" fill="${col}" stroke="#1a1916" stroke-width="1.5"/>`;
+      }).join('');
+    }
+
+    // Today vertical line
+    const todayX = xScale(Math.min(todayDay, totalDays));
+    const todayLine = `<line x1="${todayX}" y1="${pad.top}" x2="${todayX}" y2="${pad.top + innerH}" stroke="#f0ece3" stroke-width="1" opacity="0.15"/>`;
+    const todayLabel = `<text x="${todayX}" y="${pad.top - 2}" text-anchor="middle" fill="#f0ece3" font-size="8" font-family="'DM Mono', monospace" opacity="0.4">today</text>`;
+
+    svg.innerHTML = gridLines + yLabels + xLabels + ceilLine + planLine + fillPath + actualPath + dots + todayLine + todayLabel;
+  }
+
+  function renderHistory(ci) {
+    const el = document.getElementById('history-list');
+    const relevant = [...history].reverse().filter(h => {
+      const d = new Date(h.ts);
+      return d >= ci.cycleStart && d <= ci.cycleEnd;
+    });
+
+    if (relevant.length === 0) {
+      el.innerHTML = '<li class="empty">No entries this cycle yet.</li>';
+      return;
+    }
+
+    el.innerHTML = relevant.map((item, i) => {
+      const prev = relevant[i + 1];
+      const delta = prev ? item.balance - prev.balance : null;
+      const d = new Date(item.ts);
+      const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
+        d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      let deltaHtml = '';
+      if (delta !== null) {
+        const cls = delta >= 0 ? 'delta-pos' : 'delta-neg';
+        deltaHtml = `<span class="history-delta ${cls}">${delta >= 0 ? '+' : ''}${Math.round(delta)}</span>`;
+      }
+      return `<li class="history-item">
+        <div>
+          <div class="history-balance">$${item.balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+          <div class="history-date">${dateStr}${item.note ? ' · ' + item.note : ''}</div>
+        </div>
+        ${deltaHtml}
+      </li>`;
+    }).join('');
+  }
+
+  // ---- Actions ----
+  function saveSettings() {
+    const limit = parseFloat(document.getElementById('monthly-limit').value);
+    const day = parseInt(document.getElementById('billing-day').value);
+
+    if (!limit || !day) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    settings = { monthlyLimit: limit, billingDay: day };
+    save();
+    document.getElementById('setup-card').style.display = 'none';
+    render();
+  }
+
+  function logBalance() {
+    const bal = parseFloat(document.getElementById('new-balance').value);
+    const note = document.getElementById('balance-note').value.trim();
+
+    if (isNaN(bal) || bal < 0) {
+      alert('Enter a valid balance.');
+      return;
+    }
+
+    history.push({ ts: new Date().toISOString(), balance: bal, note });
+    save();
+
+    document.getElementById('new-balance').value = '';
+    document.getElementById('balance-note').value = '';
+
+    const conf = document.getElementById('log-confirmation');
+    conf.style.display = 'block';
+    setTimeout(() => { conf.style.display = 'none'; }, 2000);
+
+    render();
+    showTab('status');
+  }
+
+  function clearHistory() {
+    history = [];
+    save();
+    render();
+  }
+
+  function toggleSetup() {
+    const card = document.getElementById('setup-card');
+    const isVisible = card.style.display !== 'none';
+    card.style.display = isVisible ? 'none' : 'block';
+    document.getElementById('close-setup-btn').style.display = isVisible ? 'none' : 'block';
+  }
+
+  function showTab(name) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    const tabs = ['status', 'update', 'history'];
+    document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
+  }
+
+  // ---- Init ----
+  render();
+</script>
+</body>
+</html>
