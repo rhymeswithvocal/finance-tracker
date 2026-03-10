@@ -539,26 +539,39 @@
 
   // ---- Cycle logic ----
   function getCycleInfo() {
-    const now = new Date();
     const billingDay = settings.billingDay;
-    const today = now.getDate();
 
-    let cycleStart, cycleEnd;
+    // Determine today's date in Eastern time
+    const etDateStr = new Date().toLocaleDateString('en-US', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' });
+    const [etMonth, etDay, etYear] = etDateStr.split('/').map(Number);
+    const todayET = new Date(etYear, etMonth - 1, etDay); // midnight local, date matches ET
 
-    if (today >= billingDay) {
-      cycleStart = new Date(now.getFullYear(), now.getMonth(), billingDay);
-      cycleEnd = new Date(now.getFullYear(), now.getMonth() + 1, billingDay);
+    let cycleStartYear, cycleStartMonth, cycleEndYear, cycleEndMonth;
+
+    if (etDay >= billingDay) {
+      cycleStartYear = etYear; cycleStartMonth = etMonth - 1;
+      cycleEndYear = etYear;   cycleEndMonth = etMonth;
     } else {
-      cycleStart = new Date(now.getFullYear(), now.getMonth() - 1, billingDay);
-      cycleEnd = new Date(now.getFullYear(), now.getMonth(), billingDay);
+      cycleStartYear = etYear; cycleStartMonth = etMonth - 2;
+      cycleEndYear = etYear;   cycleEndMonth = etMonth - 1;
     }
 
-    const totalMs = cycleEnd - cycleStart;
-    const elapsedMs = now - cycleStart;
-    const fractionElapsed = Math.min(1, Math.max(0, elapsedMs / totalMs));
-    const totalDays = Math.round(totalMs / 86400000);
-    const daysElapsed = Math.floor(elapsedMs / 86400000);
-    const daysLeft = totalDays - daysElapsed;
+    // Midnight ET on cycle boundaries, expressed as plain local dates
+    const cycleStartStr = new Date(cycleStartYear, cycleStartMonth, billingDay)
+      .toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const cycleEndStr = new Date(cycleEndYear, cycleEndMonth, billingDay)
+      .toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+
+    const [csMonth, csDay, csYear] = cycleStartStr.split('/').map(Number);
+    const [ceMonth, ceDay, ceYear] = cycleEndStr.split('/').map(Number);
+
+    const cycleStart = new Date(csYear, csMonth - 1, csDay);
+    const cycleEnd   = new Date(ceYear, ceMonth - 1, ceDay);
+
+    const totalDays    = Math.round((cycleEnd - cycleStart) / 86400000);
+    const daysElapsed  = Math.round((todayET - cycleStart) / 86400000);
+    const daysLeft     = totalDays - daysElapsed;
+    const fractionElapsed = daysElapsed / totalDays;
 
     return { cycleStart, cycleEnd, fractionElapsed, totalDays, daysElapsed, daysLeft };
   }
