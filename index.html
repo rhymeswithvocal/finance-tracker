@@ -873,6 +873,21 @@
   }
 
   // ---- Init ----
+  (function checkBalanceParam() {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('balance');
+    if (raw !== null) {
+      const bal = parseFloat(raw);
+      if (!isNaN(bal) && bal >= 0) {
+        history.push({ ts: new Date().toISOString(), balance: bal, note: '' });
+        save();
+      }
+      params.delete('balance');
+      const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+      window.history.replaceState(null, '', newUrl);
+    }
+  })();
+
   render();
 </script>
 </body>
