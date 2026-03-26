@@ -669,7 +669,7 @@
       if (daysEquiv === 0) {
         paceLine.innerHTML = `You're right on pace.`;
       } else if (ahead) {
-        paceLine.innerHTML = `That's about <strong>${daysEquiv} day${daysEquiv !== 1 ? 's' : ''}</strong> worth of budget — you could spend nothing for ${daysEquiv} day${daysEquiv !== 1 ? 's' : ''} and still be on track.`;
+        paceLine.innerHTML = `That's about <strong>${daysEquiv} day${daysEquiv !== 1 ? 's' : ''}</strong> worth of budget headroom.`;
       } else {
         paceLine.innerHTML = `That's about <strong>${daysEquiv} day${daysEquiv !== 1 ? 's' : ''}</strong> worth of budget — try <strong>${daysEquiv} no-spend day${daysEquiv !== 1 ? 's' : ''}</strong> to get back on track.`;
       }
